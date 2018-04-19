@@ -104,8 +104,10 @@ pod.once('ready', function () {
 function verify(req, app, payload) {
     // not even a remote app
     if (!app.remote) return
-    // check repo match
 
+    console.log('received webhook request: ', payload)
+
+    // check repo match
     var repo = payload.repository
     var repoURL
 
