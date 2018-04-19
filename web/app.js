@@ -105,6 +105,7 @@ function verify(req, app, payload) {
     // not even a remote app
     if (!app.remote) return
 
+    console.log('app: ', app)
     console.log('received webhook request: ', payload)
 
     // check repo match
