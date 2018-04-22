@@ -117,7 +117,7 @@ function verify(req, app, payload) {
 
         repoURL = repo.links.html.href
     } else {
-        repoURL = repo.url || repo.https_url
+        repoURL = repo.url || repo.https_url || repo.clone_url
         console.log('\nreceived webhook request from: ' + repoURL)
     }
 
