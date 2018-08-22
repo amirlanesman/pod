@@ -15,16 +15,19 @@ fs = require('fs'),
 var conf = pod.reloadConfig()
 
 // middlewares
-var reloadConf = function (req, res, next) {
+var reloadConf = function(req, res, next)
+{
     conf = pod.reloadConfig()
     next()
 }
-var auth = function (req, res, next) {
+var auth = function(req, res, next)
+{
     var user = basicAuth(req);
     const username = (conf.web.username || 'admin');
     const password = (conf.web.password || 'admin');
     console.log(JSON.stringify(user))
-    if (!user || user.name !== username || user.pass !== password) {
+    if(!user || user.name !== username || user.pass !== password)
+    {
         res.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
         return res.sendStatus(401);
     }
@@ -39,60 +42,77 @@ app.use(bodyParser.json())
 app.use(statics(path.join(__dirname, 'static')))
 
 
-app.get('/', auth, function (req, res) {
-    pod.listApps(function (err, list) {
-        if (err) return res.end(err)
+app.get('/', auth, function(req, res)
+{
+    pod.listApps(function(err, list)
+    {
+        if(err) return res.end(err)
         return res.render('index', {
             apps: list
         })
     })
 })
 
-app.get('/json', auth, function (req, res) {
-    pod.listApps(function (err, list) {
-        if (err) return res.end(err)
+app.get('/json', auth, function(req, res)
+{
+    pod.listApps(function(err, list)
+    {
+        if(err) return res.end(err)
         res.json(list)
         res.end();
     })
 })
 
-app.post('/hooks/:appid', function (req, res) {
+app.post('/hooks/:appid', function(req, res)
+{
     var appid = req.params.appid,
         payload = JSON.stringify(req.body),
         app = conf.apps[appid]
 
-    try {
+    try
+    {
         payload = JSON.parse(payload)
-    } catch (e) {
+    } catch(e)
+    {
         return res.end(e.toString())
     }
 
-    if (req.get('X-GitHub-Event') === 'ping') {
-        if (ghURL(payload.repository.git_url).repopath === ghURL(app.remote).repopath) {
+    if(req.get('X-GitHub-Event') === 'ping')
+    {
+        if(ghURL(payload.repository.git_url).repopath === ghURL(app.remote).repopath)
+        {
             return res.status(200).end()
-        } else {
+        } else
+        {
             return res.status(500).end()
         }
     }
 
-    if (app && verify(req, app, payload)) {
-        executeHook(appid, app, payload, function () {
+    if(app && verify(req, app, payload))
+    {
+        executeHook(appid, app, payload, function()
+        {
             res.end()
         })
-    } else {
+    } else
+    {
         res.end()
     }
 })
 
 // listen when API is ready
-pod.once('ready', function () {
+pod.once('ready', function()
+{
     // load config first
     conf = pod.getConfig()
     // conditional open up jsonp based on config
-    if (conf.web.jsonp === true) {
-        app.get('/jsonp', function (req, res) {
-            pod.listApps(function (err, list) {
-                if (err) return res.end(err)
+    if(conf.web.jsonp === true)
+    {
+        app.get('/jsonp', function(req, res)
+        {
+            pod.listApps(function(err, list)
+            {
+                if(err) return res.end(err)
                 res.jsonp(list)
             })
         })
@@ -101,27 +121,31 @@ pod.once('ready', function () {
 })
 
 // Helpers
-function verify(req, app, payload) {
+function verify(req, app, payload)
+{
     // not even a remote app
-    if (!app.remote) return
+    if(!app.remote) return
     // check repo match
 
     var repo = payload.repository
     var repoURL
 
-    if (repo.links && /bitbucket\.org/.test(repo.links.html.href)) {
+    if(repo.links && /bitbucket\.org/.test(repo.links.html.href))
+    {
         console.log('\nreceived webhook request from: ' + repo.links.html.href)
 
         repoURL = repo.links.html.href
-    } else {
+    } else
+    {
         console.log('\nreceived webhook request from: ' + repo.url)
 
         repoURL = repo.url
     }
 
-    if (!repoURL) return
+    if(!repoURL) return
 
-    if (ghURL(repoURL).repopath !== ghURL(app.remote).repopath) {
+    if(ghURL(repoURL).repopath !== ghURL(app.remote).repopath)
+    {
         console.log('aborted.')
         return
     }
@@ -129,70 +153,97 @@ function verify(req, app, payload) {
     var commit
 
     // support bitbucket webhooks payload structure
-    if (/bitbucket\.org/.test(repoURL)) {
+    if(/bitbucket\.org/.test(repoURL))
+    {
         commit = payload.push.changes[0].new
 
         commit.message = commit.target.message
-    } else {
+    } else
+    {
         // use gitlab's payload structure if detected
         commit = payload.head_commit ? payload.head_commit :
             payload.commits[payload.commits.length - 1];
     }
 
-    if (!commit) return
+    if(!commit) return
 
     // skip it with [pod skip] message
     console.log('commit message: ' + commit.message)
-    if (/\[pod skip\]/.test(commit.message)) {
+    if(/\[pod skip\]/.test(commit.message))
+    {
         console.log('aborted.')
         return
     }
     // check branch match
     var ref = commit.name ? commit.name : payload.ref
 
-    if (!ref) return
+    if(!ref) return
 
     var branch = ref.replace('refs/heads/', ''),
         expected = app.branch || 'master'
     console.log('expected branch: ' + expected + ', got branch: ' + branch)
-    if (branch !== expected) {
+    if(branch !== expected)
+    {
         console.log('aborted.')
         return
     }
     return true
 }
 
-function executeHook(appid, app, payload, cb) {
+function executeHook(appid, app, payload, cb)
+{
 
     // set a response timeout to avoid GitHub webhooks
     // hanging up due to long build times
     var responded = false
-    function respond(err) {
-        if (!responded) {
+    function respond(err)
+    {
+        if(!responded)
+        {
             responded = true
             cb(err)
         }
     }
     setTimeout(respond, 3000)
 
-    fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function (err, template) {
-        if (err) return respond(err)
+    // add apps environment configuration to current environment
+    // run npm install / .podhook with the apps env configuration
+    var appEnv = process.env
+    var globalConfig = pod.getConfig()
+    appEnv.NODE_ENV = app.node_env || appEnv.NODE_ENV || 'development'
+    for(i in globalConfig.env)
+    {
+        appEnv[i] = globalConfig.env[i];
+    }
+
+    for(i in app.env)
+    {
+        appEnv[i] = app.env[i]
+    }
+
+    fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function(err, template)
+    {
+        if(err) return respond(err)
         var hookPath = conf.root + '/temphook.sh',
             hook = template
                 .replace(/\{\{pod_dir\}\}/g, conf.root)
                 .replace(/\{\{app\}\}/g, appid)
-        if (app.branch) {
+        if(app.branch)
+        {
             hook = hook.replace('origin/master', 'origin/' + app.branch)
         }
-        fs.writeFile(hookPath, hook, function (err) {
-            if (err) return respond(err)
-            fs.chmod(hookPath, '0777', function (err) {
-                if (err) return respond(err)
+        fs.writeFile(hookPath, hook, function(err)
+        {
+            if(err) return respond(err)
+            fs.chmod(hookPath, '0777', function(err)
+            {
+                if(err) return respond(err)
                 console.log('excuting github webhook for ' + appid + '...')
-                var child = spawn('bash', [hookPath])
+                var child = spawn('bash', [hookPath], {env: appEnv})
                 child.stdout.pipe(process.stdout)
                 child.stderr.pipe(process.stderr)
-                child.on('exit', function (code) {
+                child.on('exit', function(code)
+                {
                     fs.unlink(hookPath, respond)
                 })
             })
