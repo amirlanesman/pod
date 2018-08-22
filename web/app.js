@@ -209,7 +209,17 @@ function executeHook(appid, app, payload, cb)
     // add apps environment configuration to current environment
     // run npm install / .podhook with the apps env configuration
     var appEnv = process.env
-    appEnv = app.node_env || appEnv.NODE_ENV || 'development'
+    var globalConfig = pod.getConfig()
+    appEnv.NODE_ENV = app.node_env || appEnv.NODE_ENV || 'development'
+    for(i in globalConfig.env)
+    {
+        appEnv[i] = globalConfig.env[i];
+    }
+
+    for(i in app.env)
+    {
+        appEnv[i] = app.env[i]
+    }
 
     fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function(err, template)
     {
