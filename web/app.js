@@ -6,7 +6,6 @@ const express = require('express');
 const pod = require('../lib/api');
 const ghURL = require('parse-github-url');
 const app = express();
-// const favicon = require('serve-favicon');
 const statics = require('serve-static');
 const basicAuth = require('basic-auth');
 
