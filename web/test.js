@@ -1,4 +1,4 @@
-var r = require('request')
+var r = require('request');
 r({
     url: 'http://localhost:19999/hooks/test3',
     method: 'POST',
@@ -16,4 +16,4 @@ r({
             }
         })
     }
-})
+});
