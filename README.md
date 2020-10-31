@@ -255,6 +255,12 @@ fi
 # restart is automatic so no need to include that here
 ```
 
+You can also access an apps environment variables directly in the podhook by accessing the variable with the environment variable name. For example:
+```bash
+# runs npm install with the node_env setting in .podrc, so it can ommit dev dependencies if on production
+NODE_ENV=$NODE_ENV npm install
+```
+
 You can also directly edit the post-receive script of an app found in `pod-root-dir/repos/my-app.git/hooks/post-receive` if you wish.
 
 ## Using the API

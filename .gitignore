@@ -2,3 +2,5 @@
 node_modules
 local
 temp
+.vscode/*
+!.vscode/tasks.json

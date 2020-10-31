@@ -12,15 +12,15 @@ git reset --hard origin/master
 
 # if has .podhook, execute that; otherwise default
 if [ -f .podhook ]; then
-	bash .podhook
-	rc=$?
-	if [[ $rc != 0 ]]; then
-		echo "`tput setaf 1`ERROR: .podhook exited with code $rc, working tree is reverted.`tput sgr0`"
-		git reset $LAST_COMMIT --hard
-		exit $rc
-	fi
+    bash .podhook
+    rc=$?
+    if [[ $rc != 0 ]]; then
+        echo "`tput setaf 1`ERROR: .podhook exited with code $rc, working tree is reverted.`tput sgr0`"
+        git reset $LAST_COMMIT --hard
+        exit $rc
+    fi
 elif [ -f package.json ]; then
-	npm install
+    npm install
 fi
 
 pod stop {{app}}
