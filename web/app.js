@@ -104,8 +104,11 @@ pod.once('ready', function () {
 function verify(req, app, payload) {
     // not even a remote app
     if (!app.remote) return
-    // check repo match
 
+    console.log('app: ', app)
+    console.log('received webhook request: ', payload)
+
+    // check repo match
     var repo = payload.repository
     var repoURL
 
@@ -114,9 +117,8 @@ function verify(req, app, payload) {
 
         repoURL = repo.links.html.href
     } else {
-        console.log('\nreceived webhook request from: ' + repo.url)
-
-        repoURL = repo.url
+        repoURL = repo.url || repo.https_url || repo.clone_url
+        console.log('\nreceived webhook request from: ' + repoURL)
     }
 
     if (!repoURL) return
@@ -142,8 +144,9 @@ function verify(req, app, payload) {
     if (!commit) return
 
     // skip it with [pod skip] message
-    console.log('commit message: ' + commit.message)
-    if (/\[pod skip\]/.test(commit.message)) {
+    var message = commit.message || commit.short_message
+    console.log('commit message: ' + message)
+    if (/\[pod skip\]/.test(message)) {
         console.log('aborted.')
         return
     }
